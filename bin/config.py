@@ -37,7 +37,7 @@ def rpc(args, command, params):
         }
         if args.user:
             kwargs["auth"] = (args.user, args.password)
-        r = requests.post('http://localhost:5572/'+command, **kwargs)
+        r = requests.post(f'http://localhost:5572/{command}', **kwargs)
         if r.status_code != 200:
             raise ValueError(f"RC command failed: Error {r.status_code}: {r.text}")
         return r.json()
@@ -87,15 +87,14 @@ def ask(opt):
                 return examples[i]["Value"]
         except ValueError:
             pass
-        if opt["Exclusive"]:
-            for example in examples:
-                if s == example["Value"]:
-                    return s
-            # Exclusive is set but the value isn't one of the accepted
-            # ones so continue
-            print("Value isn't one of the acceptable values")
-        else:
+        if not opt["Exclusive"]:
             return s
+        for example in examples:
+            if s == example["Value"]:
+                return s
+        # Exclusive is set but the value isn't one of the accepted
+        # ones so continue
+        print("Value isn't one of the acceptable values")
     return s
 
 def create_or_update(what, args):
@@ -124,7 +123,7 @@ def create_or_update(what, args):
         print("Input to API")
         pprint(inp)
         print(sep)
-        out = rpc(args, "config/"+what, inp)
+        out = rpc(args, f"config/{what}", inp)
         print(sep)
         print("Output from API")
         pprint(out)

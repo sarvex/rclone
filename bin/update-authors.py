@@ -21,10 +21,12 @@ def add_email(name, email):
     """
     adds the email passed in to the end of authors.md
     """
-    print("Adding %s <%s>" % (name, email))
+    print(f"Adding {name} <{email}>")
     with open(AUTHORS, "a+") as fd:
-        print("  * %s <%s>" % (name, email), file=fd)
-    subprocess.check_call(["git", "commit", "-m", "Add %s to contributors" % name, AUTHORS])
+        print(f"  * {name} <{email}>", file=fd)
+    subprocess.check_call(
+        ["git", "commit", "-m", f"Add {name} to contributors", AUTHORS]
+    )
     
 def main():
     out = subprocess.check_output(["git", "log", '--reverse', '--format=%an|%ae', "master"])

@@ -147,31 +147,33 @@ def read_doc(doc):
 
 def check_docs(docpath):
     """Check all the docs are in docpath"""
-    files = set(f for f in os.listdir(docpath) if f.endswith(".md"))
+    files = {f for f in os.listdir(docpath) if f.endswith(".md")}
     files -= set(ignore_docs)
     docs_set = set(docs)
     if files == docs_set:
         return
-    print("Files on disk but not in docs variable: %s" % ", ".join(files - docs_set))
-    print("Files in docs variable but not on disk: %s" % ", ".join(docs_set - files))
+    print(f'Files on disk but not in docs variable: {", ".join(files - docs_set)}')
+    print(f'Files in docs variable but not on disk: {", ".join(docs_set - files)}')
     raise ValueError("Missing files")
 
 def read_command(command):
-    doc = read_doc("commands/"+command)
+    doc = read_doc(f"commands/{command}")
     doc = re.sub(r"### Options inherited from parent commands.*$", "", doc, 0, re.S)
     doc = doc.strip()+"\n"
     return doc
 
 def read_commands(docpath):
     """Reads the commands an makes them into a single page"""
-    files = set(f for f in os.listdir(docpath + "/commands") if f.endswith(".md"))
+    files = {f for f in os.listdir(f"{docpath}/commands") if f.endswith(".md")}
     docs = []
     for command in commands_order:
         docs.append(read_command(command))
         files.remove(command)
-    for command in sorted(files):
-        if command != "rclone.md":
-            docs.append(read_command(command))
+    docs.extend(
+        read_command(command)
+        for command in sorted(files)
+        if command != "rclone.md"
+    )
     return "\n".join(docs)
 
 def main():
@@ -192,7 +194,7 @@ def main():
             if doc == "docs.md":
                 contents = re.sub(r"The main rclone commands.*?for the full list.", command_docs, contents, 0, re.S)
             out.write(contents)
-    print("Written '%s'" % outfile)
+    print(f"Written '{outfile}'")
 
 if __name__ == "__main__":
     main()

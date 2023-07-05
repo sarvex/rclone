@@ -53,18 +53,19 @@ def make_out(data, indent=""):
     """Return a out, lines the first being a function for output into the second"""
     out_lines = []
     def out(category, title=None):
-        if title == None:
+        if title is None:
             title = category
         lines = data.get(category)
         if not lines:
             return
         del(data[category])
         if indent != "" and len(lines) == 1:
-            out_lines.append(indent+"* " + title+": " + lines[0])
+            out_lines.append(f"{indent}* {title}: {lines[0]}")
             return
-        out_lines.append(indent+"* " + title)
+        out_lines.append(f"{indent}* {title}")
         for line in lines:
-            out_lines.append(indent+"    * " + line)
+            out_lines.append(f"{indent}    * {line}")
+
     return out, out_lines
 
 
@@ -83,7 +84,7 @@ def process_log(log):
             categories = match.group(1).lower()
             message = match.group(2)
         message = STRIP_FIX_RE.sub("", message)
-        message = message +" ("+author+")"
+        message = f"{message} ({author})"
         message = message[0].upper()+message[1:]
         seen = set()
         for category in categories.split(","):
@@ -99,10 +100,13 @@ def process_log(log):
 
 def main():
     if len(sys.argv) != 3:
-        print("Syntax: %s vX.XX vX.XY" % sys.argv[0], file=sys.stderr)
+        print(f"Syntax: {sys.argv[0]} vX.XX vX.XY", file=sys.stderr)
         sys.exit(1)
     version, next_version = sys.argv[1], sys.argv[2]
-    log = subprocess.check_output(["git", "log", '''--pretty=format:%H|%an|%aI|%s'''] + [version+".."+next_version])
+    log = subprocess.check_output(
+        ["git", "log", '''--pretty=format:%H|%an|%aI|%s''']
+        + [f"{version}..{next_version}"]
+    )
     log = log.decode("utf-8")
     by_category = process_log(log)
 

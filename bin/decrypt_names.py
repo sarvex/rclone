@@ -25,8 +25,7 @@ def read_crypt_map(mapping_file):
     mapping = {}
     with open(mapping_file) as fd:
         for line in fd:
-            match = match_crypt.search(line)
-            if match:
+            if match := match_crypt.search(line):
                 plaintext, ciphertext = match.groups()
                 plaintexts = plaintext.split("/")
                 ciphertexts = ciphertext.split("/")
@@ -49,7 +48,7 @@ def map_log_file(crypt_map, log_file):
 
 def main():
     if len(sys.argv) < 3:
-        print("Syntax: %s <crypt-mapping-file> <log-file>" % sys.argv[0])
+        print(f"Syntax: {sys.argv[0]} <crypt-mapping-file> <log-file>")
         raise SystemExit(1)
     mapping_file, log_file = sys.argv[1:]
     crypt_map = read_crypt_map(mapping_file)
