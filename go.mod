@@ -63,12 +63,12 @@ require (
 	github.com/yunify/qingstor-sdk-go/v3 v3.2.0
 	go.etcd.io/bbolt v1.3.7
 	goftp.io/server v1.0.0-rc1
-	golang.org/x/crypto v0.7.0
-	golang.org/x/net v0.8.0
+	golang.org/x/crypto v0.17.0
+	golang.org/x/net v0.10.0
 	golang.org/x/oauth2 v0.6.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.8.0
-	golang.org/x/text v0.8.0
+	golang.org/x/sys v0.15.0
+	golang.org/x/text v0.14.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.115.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -83,7 +83,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/calebcase/tmpfile v1.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
@@ -148,5 +148,5 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/pkg/xattr v0.4.9
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c
-	golang.org/x/term v0.7.0
+	golang.org/x/term v0.15.0
 )
