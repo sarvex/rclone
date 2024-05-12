@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -323,29 +324,58 @@ func TestMiddlewareAuthCertificateUser(t *testing.T) {
 
 var _testCORSHeaderKeys = []string{
 	"Access-Control-Allow-Origin",
-	"Access-Control-Request-Method",
 	"Access-Control-Allow-Headers",
+	"Access-Control-Allow-Methods",
 }
 
 func TestMiddlewareCORS(t *testing.T) {
 	servers := []struct {
-		name   string
-		http   Config
-		origin string
+		name    string
+		http    Config
+		tryRoot bool
+		method  string
+		status  int
 	}{
-		{
-			name: "EmptyOrigin",
-			http: Config{
-				ListenAddr: []string{"127.0.0.1:0"},
-			},
-			origin: "",
-		},
 		{
 			name: "CustomOrigin",
 			http: Config{
-				ListenAddr: []string{"127.0.0.1:0"},
+				ListenAddr:  []string{"127.0.0.1:0"},
+				AllowOrigin: "http://test.rclone.org",
 			},
-			origin: "http://test.rclone.org",
+			method: "GET",
+			status: http.StatusOK,
+		},
+		{
+			name: "WithBaseURL",
+			http: Config{
+				ListenAddr:  []string{"127.0.0.1:0"},
+				AllowOrigin: "http://test.rclone.org",
+				BaseURL:     "/baseurl/",
+			},
+			method: "GET",
+			status: http.StatusOK,
+		},
+		{
+			name: "WithBaseURLTryRootGET",
+			http: Config{
+				ListenAddr:  []string{"127.0.0.1:0"},
+				AllowOrigin: "http://test.rclone.org",
+				BaseURL:     "/baseurl/",
+			},
+			method:  "GET",
+			status:  http.StatusNotFound,
+			tryRoot: true,
+		},
+		{
+			name: "WithBaseURLTryRootOPTIONS",
+			http: Config{
+				ListenAddr:  []string{"127.0.0.1:0"},
+				AllowOrigin: "http://test.rclone.org",
+				BaseURL:     "/baseurl/",
+			},
+			method:  "OPTIONS",
+			status:  http.StatusOK,
+			tryRoot: true,
 		},
 	}
 
@@ -357,7 +387,68 @@ func TestMiddlewareCORS(t *testing.T) {
 				require.NoError(t, s.Shutdown())
 			}()
 
-			s.Router().Use(MiddlewareCORS(ss.origin))
+			expected := []byte("data")
+			s.Router().Mount("/", testEchoHandler(expected))
+			s.Serve()
+
+			url := testGetServerURL(t, s)
+			// Try the query on the root, ignoring the baseURL
+			if ss.tryRoot {
+				slash := strings.LastIndex(url[:len(url)-1], "/")
+				url = url[:slash+1]
+			}
+
+			client := &http.Client{}
+			req, err := http.NewRequest(ss.method, url, nil)
+			require.NoError(t, err)
+
+			resp, err := client.Do(req)
+			require.NoError(t, err)
+			defer func() {
+				_ = resp.Body.Close()
+			}()
+
+			require.Equal(t, ss.status, resp.StatusCode, "should return expected error code")
+
+			if ss.status == http.StatusNotFound {
+				return
+			}
+			testExpectRespBody(t, resp, expected)
+
+			for _, key := range _testCORSHeaderKeys {
+				require.Contains(t, resp.Header, key, "CORS headers should be sent")
+			}
+
+			expectedOrigin := url
+			if ss.http.AllowOrigin != "" {
+				expectedOrigin = ss.http.AllowOrigin
+			}
+			require.Equal(t, expectedOrigin, resp.Header.Get("Access-Control-Allow-Origin"), "allow origin should match")
+		})
+	}
+}
+
+func TestMiddlewareCORSEmptyOrigin(t *testing.T) {
+	servers := []struct {
+		name string
+		http Config
+	}{
+		{
+			name: "EmptyOrigin",
+			http: Config{
+				ListenAddr:  []string{"127.0.0.1:0"},
+				AllowOrigin: "",
+			},
+		},
+	}
+
+	for _, ss := range servers {
+		t.Run(ss.name, func(t *testing.T) {
+			s, err := NewServer(context.Background(), WithConfig(ss.http))
+			require.NoError(t, err)
+			defer func() {
+				require.NoError(t, s.Shutdown())
+			}()
 
 			expected := []byte("data")
 			s.Router().Mount("/", testEchoHandler(expected))
@@ -380,12 +471,66 @@ func TestMiddlewareCORS(t *testing.T) {
 			testExpectRespBody(t, resp, expected)
 
 			for _, key := range _testCORSHeaderKeys {
-				require.Contains(t, resp.Header, key, "CORS headers should be sent")
+				require.NotContains(t, resp.Header, key, "CORS headers should not be sent")
+			}
+		})
+	}
+}
+
+func TestMiddlewareCORSWithAuth(t *testing.T) {
+	authServers := []struct {
+		name string
+		http Config
+		auth AuthConfig
+	}{
+		{
+			name: "ServerWithAuth",
+			http: Config{
+				ListenAddr:  []string{"127.0.0.1:0"},
+				AllowOrigin: "http://test.rclone.org",
+			},
+			auth: AuthConfig{
+				Realm:     "test",
+				BasicUser: "test_user",
+				BasicPass: "test_pass",
+			},
+		},
+	}
+
+	for _, ss := range authServers {
+		t.Run(ss.name, func(t *testing.T) {
+			s, err := NewServer(context.Background(), WithConfig(ss.http))
+			require.NoError(t, err)
+			defer func() {
+				require.NoError(t, s.Shutdown())
+			}()
+
+			s.Router().Mount("/", testEmptyHandler())
+			s.Serve()
+
+			url := testGetServerURL(t, s)
+
+			client := &http.Client{}
+			req, err := http.NewRequest("OPTIONS", url, nil)
+			require.NoError(t, err)
+
+			resp, err := client.Do(req)
+			require.NoError(t, err)
+			defer func() {
+				_ = resp.Body.Close()
+			}()
+
+			require.Equal(t, http.StatusOK, resp.StatusCode, "OPTIONS should return ok even if not authenticated")
+
+			testExpectRespBody(t, resp, []byte{})
+
+			for _, key := range _testCORSHeaderKeys {
+				require.Contains(t, resp.Header, key, "CORS headers should be sent even if not authenticated")
 			}
 
 			expectedOrigin := url
-			if ss.origin != "" {
-				expectedOrigin = ss.origin
+			if ss.http.AllowOrigin != "" {
+				expectedOrigin = ss.http.AllowOrigin
 			}
 			require.Equal(t, expectedOrigin, resp.Header.Get("Access-Control-Allow-Origin"), "allow origin should match")
 		})

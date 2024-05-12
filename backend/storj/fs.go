@@ -1,5 +1,4 @@
 //go:build !plan9
-// +build !plan9
 
 // Package storj provides an interface to Storj decentralized object storage.
 package storj
@@ -98,9 +97,10 @@ func init() {
 				},
 				}},
 			{
-				Name:     "access_grant",
-				Help:     "Access grant.",
-				Provider: "existing",
+				Name:      "access_grant",
+				Help:      "Access grant.",
+				Provider:  "existing",
+				Sensitive: true,
 			},
 			{
 				Name:     "satellite_address",
@@ -120,14 +120,16 @@ func init() {
 				},
 			},
 			{
-				Name:     "api_key",
-				Help:     "API key.",
-				Provider: newProvider,
+				Name:      "api_key",
+				Help:      "API key.",
+				Provider:  newProvider,
+				Sensitive: true,
 			},
 			{
-				Name:     "passphrase",
-				Help:     "Encryption passphrase.\n\nTo access existing objects enter passphrase used for uploading.",
-				Provider: newProvider,
+				Name:      "passphrase",
+				Help:      "Encryption passphrase.\n\nTo access existing objects enter passphrase used for uploading.",
+				Provider:  newProvider,
+				Sensitive: true,
 			},
 		},
 	})

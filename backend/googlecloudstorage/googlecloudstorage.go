@@ -91,18 +91,21 @@ func init() {
 			})
 		},
 		Options: append(oauthutil.SharedOptions, []fs.Option{{
-			Name: "project_number",
-			Help: "Project number.\n\nOptional - needed only for list/create/delete buckets - see your developer console.",
+			Name:      "project_number",
+			Help:      "Project number.\n\nOptional - needed only for list/create/delete buckets - see your developer console.",
+			Sensitive: true,
 		}, {
-			Name: "user_project",
-			Help: "User project.\n\nOptional - needed only for requester pays.",
+			Name:      "user_project",
+			Help:      "User project.\n\nOptional - needed only for requester pays.",
+			Sensitive: true,
 		}, {
 			Name: "service_account_file",
 			Help: "Service Account Credentials JSON file path.\n\nLeave blank normally.\nNeeded only if you want use SA instead of interactive login." + env.ShellExpandHelp,
 		}, {
-			Name: "service_account_credentials",
-			Help: "Service Account Credentials JSON blob.\n\nLeave blank normally.\nNeeded only if you want use SA instead of interactive login.",
-			Hide: fs.OptionHideBoth,
+			Name:      "service_account_credentials",
+			Help:      "Service Account Credentials JSON blob.\n\nLeave blank normally.\nNeeded only if you want use SA instead of interactive login.",
+			Hide:      fs.OptionHideBoth,
+			Sensitive: true,
 		}, {
 			Name:    "anonymous",
 			Help:    "Access public buckets and objects without credentials.\n\nSet to 'true' if you just want to download files and don't configure credentials.",
@@ -1307,10 +1310,11 @@ func (o *Object) Storable() bool {
 
 // Open an object for read
 func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (in io.ReadCloser, err error) {
+	url := o.url
 	if o.fs.opt.UserProject != "" {
-		o.url = o.url + "&userProject=" + o.fs.opt.UserProject
+		url += "&userProject=" + o.fs.opt.UserProject
 	}
-	req, err := http.NewRequestWithContext(ctx, "GET", o.url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

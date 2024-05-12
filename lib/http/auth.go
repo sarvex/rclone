@@ -11,8 +11,7 @@ import (
 
 // AuthHelp returns text describing the http authentication to add to the command help.
 func AuthHelp(prefix string) string {
-	help := `
-#### Authentication
+	help := `#### Authentication
 
 By default this will serve files without needing a login.
 
@@ -38,6 +37,7 @@ The password file can be updated while rclone is running.
 Use ` + "`--{{ .Prefix }}realm`" + ` to set the authentication realm.
 
 Use ` + "`--{{ .Prefix }}salt`" + ` to change the password hashing salt from the default.
+
 `
 	tmpl, err := template.New("auth help").Parse(help)
 	if err != nil {
@@ -75,11 +75,11 @@ type AuthConfig struct {
 
 // AddFlagsPrefix adds flags to the flag set for AuthConfig
 func (cfg *AuthConfig) AddFlagsPrefix(flagSet *pflag.FlagSet, prefix string) {
-	flags.StringVarP(flagSet, &cfg.HtPasswd, prefix+"htpasswd", "", cfg.HtPasswd, "A htpasswd file - if not provided no authentication is done")
-	flags.StringVarP(flagSet, &cfg.Realm, prefix+"realm", "", cfg.Realm, "Realm for authentication")
-	flags.StringVarP(flagSet, &cfg.BasicUser, prefix+"user", "", cfg.BasicUser, "User name for authentication")
-	flags.StringVarP(flagSet, &cfg.BasicPass, prefix+"pass", "", cfg.BasicPass, "Password for authentication")
-	flags.StringVarP(flagSet, &cfg.Salt, prefix+"salt", "", cfg.Salt, "Password hashing salt")
+	flags.StringVarP(flagSet, &cfg.HtPasswd, prefix+"htpasswd", "", cfg.HtPasswd, "A htpasswd file - if not provided no authentication is done", prefix)
+	flags.StringVarP(flagSet, &cfg.Realm, prefix+"realm", "", cfg.Realm, "Realm for authentication", prefix)
+	flags.StringVarP(flagSet, &cfg.BasicUser, prefix+"user", "", cfg.BasicUser, "User name for authentication", prefix)
+	flags.StringVarP(flagSet, &cfg.BasicPass, prefix+"pass", "", cfg.BasicPass, "Password for authentication", prefix)
+	flags.StringVarP(flagSet, &cfg.Salt, prefix+"salt", "", cfg.Salt, "Password hashing salt", prefix)
 }
 
 // AddAuthFlagsPrefix adds flags to the flag set for AuthConfig

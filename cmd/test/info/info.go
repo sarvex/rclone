@@ -27,16 +27,19 @@ import (
 	"github.com/rclone/rclone/fs/config/flags"
 	"github.com/rclone/rclone/fs/hash"
 	"github.com/rclone/rclone/fs/object"
+	"github.com/rclone/rclone/fs/operations"
 	"github.com/rclone/rclone/lib/random"
 	"github.com/spf13/cobra"
 )
 
 var (
 	writeJSON          string
+	keepTestFiles      bool
 	checkNormalization bool
 	checkControl       bool
 	checkLength        bool
 	checkStreaming     bool
+	checkBase32768     bool
 	all                bool
 	uploadWait         time.Duration
 	positionLeftRe     = regexp.MustCompile(`(?s)^(.*)-position-left-([[:xdigit:]]+)$`)
@@ -47,13 +50,15 @@ var (
 func init() {
 	test.Command.AddCommand(commandDefinition)
 	cmdFlags := commandDefinition.Flags()
-	flags.StringVarP(cmdFlags, &writeJSON, "write-json", "", "", "Write results to file")
-	flags.BoolVarP(cmdFlags, &checkNormalization, "check-normalization", "", false, "Check UTF-8 Normalization")
-	flags.BoolVarP(cmdFlags, &checkControl, "check-control", "", false, "Check control characters")
-	flags.DurationVarP(cmdFlags, &uploadWait, "upload-wait", "", 0, "Wait after writing a file")
-	flags.BoolVarP(cmdFlags, &checkLength, "check-length", "", false, "Check max filename length")
-	flags.BoolVarP(cmdFlags, &checkStreaming, "check-streaming", "", false, "Check uploads with indeterminate file size")
-	flags.BoolVarP(cmdFlags, &all, "all", "", false, "Run all tests")
+	flags.StringVarP(cmdFlags, &writeJSON, "write-json", "", "", "Write results to file", "")
+	flags.BoolVarP(cmdFlags, &checkNormalization, "check-normalization", "", false, "Check UTF-8 Normalization", "")
+	flags.BoolVarP(cmdFlags, &checkControl, "check-control", "", false, "Check control characters", "")
+	flags.DurationVarP(cmdFlags, &uploadWait, "upload-wait", "", 0, "Wait after writing a file", "")
+	flags.BoolVarP(cmdFlags, &checkLength, "check-length", "", false, "Check max filename length", "")
+	flags.BoolVarP(cmdFlags, &checkStreaming, "check-streaming", "", false, "Check uploads with indeterminate file size", "")
+	flags.BoolVarP(cmdFlags, &checkBase32768, "check-base32768", "", false, "Check can store all possible base32768 characters", "")
+	flags.BoolVarP(cmdFlags, &all, "all", "", false, "Run all tests", "")
+	flags.BoolVarP(cmdFlags, &keepTestFiles, "keep-test-files", "", false, "Keep test files after execution", "")
 }
 
 var commandDefinition = &cobra.Command{
@@ -71,17 +76,26 @@ a bit of go code for each one.
 	},
 	Run: func(command *cobra.Command, args []string) {
 		cmd.CheckArgs(1, 1e6, command, args)
-		if !checkNormalization && !checkControl && !checkLength && !checkStreaming && !all {
-			log.Fatalf("no tests selected - select a test or use -all")
+		if !checkNormalization && !checkControl && !checkLength && !checkStreaming && !checkBase32768 && !all {
+			log.Fatalf("no tests selected - select a test or use --all")
 		}
 		if all {
 			checkNormalization = true
 			checkControl = true
 			checkLength = true
 			checkStreaming = true
+			checkBase32768 = true
 		}
 		for i := range args {
-			f := cmd.NewFsDir(args[i : i+1])
+			tempDirName := "rclone-test-info-" + random.String(8)
+			tempDirPath := path.Join(args[i], tempDirName)
+			f := cmd.NewFsDir([]string{tempDirPath})
+			fs.Infof(f, "Created temporary directory for test files: %s", tempDirPath)
+			err := f.Mkdir(context.Background(), "")
+			if err != nil {
+				log.Fatalf("couldn't create temporary directory: %v", err)
+			}
+
 			cmd.Run(false, false, command, func() error {
 				return readInfo(context.Background(), f)
 			})
@@ -100,6 +114,7 @@ type results struct {
 	canReadUnnormalized  bool
 	canReadRenormalized  bool
 	canStream            bool
+	canBase32768         bool
 }
 
 func newResults(ctx context.Context, f fs.Fs) *results {
@@ -140,6 +155,9 @@ func (r *results) Print() {
 	}
 	if checkStreaming {
 		fmt.Printf("canStream = %v\n", r.canStream)
+	}
+	if checkBase32768 {
+		fmt.Printf("base32768isOK = %v // make sure maxFileLength for 2 byte unicode chars is the same as for 1 byte characters\n", r.canBase32768)
 	}
 }
 
@@ -464,10 +482,18 @@ func (r *results) checkStreaming() {
 }
 
 func readInfo(ctx context.Context, f fs.Fs) error {
-	err := f.Mkdir(ctx, "")
-	if err != nil {
-		return fmt.Errorf("couldn't mkdir: %w", err)
+	// Ensure cleanup unless --keep-test-files is specified
+	if !keepTestFiles {
+		defer func() {
+			err := operations.Purge(ctx, f, "")
+			if err != nil {
+				fs.Errorf(f, "Failed to purge temporary directory: %v", err)
+			} else {
+				fs.Infof(f, "Removed temporary directory for test files: %s", f.Root())
+			}
+		}()
 	}
+
 	r := newResults(ctx, f)
 	if checkControl {
 		r.checkControls()
@@ -482,6 +508,9 @@ func readInfo(ctx context.Context, f fs.Fs) error {
 	}
 	if checkStreaming {
 		r.checkStreaming()
+	}
+	if checkBase32768 {
+		r.checkBase32768()
 	}
 	r.Print()
 	r.WriteJSON()

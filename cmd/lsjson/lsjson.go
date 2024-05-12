@@ -23,17 +23,17 @@ var (
 func init() {
 	cmd.Root.AddCommand(commandDefinition)
 	cmdFlags := commandDefinition.Flags()
-	flags.BoolVarP(cmdFlags, &opt.Recurse, "recursive", "R", false, "Recurse into the listing")
-	flags.BoolVarP(cmdFlags, &opt.ShowHash, "hash", "", false, "Include hashes in the output (may take longer)")
-	flags.BoolVarP(cmdFlags, &opt.NoModTime, "no-modtime", "", false, "Don't read the modification time (can speed things up)")
-	flags.BoolVarP(cmdFlags, &opt.NoMimeType, "no-mimetype", "", false, "Don't read the mime type (can speed things up)")
-	flags.BoolVarP(cmdFlags, &opt.ShowEncrypted, "encrypted", "", false, "Show the encrypted names")
-	flags.BoolVarP(cmdFlags, &opt.ShowOrigIDs, "original", "", false, "Show the ID of the underlying Object")
-	flags.BoolVarP(cmdFlags, &opt.FilesOnly, "files-only", "", false, "Show only files in the listing")
-	flags.BoolVarP(cmdFlags, &opt.DirsOnly, "dirs-only", "", false, "Show only directories in the listing")
-	flags.BoolVarP(cmdFlags, &opt.Metadata, "metadata", "M", false, "Add metadata to the listing")
-	flags.StringArrayVarP(cmdFlags, &opt.HashTypes, "hash-type", "", nil, "Show only this hash type (may be repeated)")
-	flags.BoolVarP(cmdFlags, &statOnly, "stat", "", false, "Just return the info for the pointed to file")
+	flags.BoolVarP(cmdFlags, &opt.Recurse, "recursive", "R", false, "Recurse into the listing", "")
+	flags.BoolVarP(cmdFlags, &opt.ShowHash, "hash", "", false, "Include hashes in the output (may take longer)", "")
+	flags.BoolVarP(cmdFlags, &opt.NoModTime, "no-modtime", "", false, "Don't read the modification time (can speed things up)", "")
+	flags.BoolVarP(cmdFlags, &opt.NoMimeType, "no-mimetype", "", false, "Don't read the mime type (can speed things up)", "")
+	flags.BoolVarP(cmdFlags, &opt.ShowEncrypted, "encrypted", "", false, "Show the encrypted names", "")
+	flags.BoolVarP(cmdFlags, &opt.ShowOrigIDs, "original", "", false, "Show the ID of the underlying Object", "")
+	flags.BoolVarP(cmdFlags, &opt.FilesOnly, "files-only", "", false, "Show only files in the listing", "")
+	flags.BoolVarP(cmdFlags, &opt.DirsOnly, "dirs-only", "", false, "Show only directories in the listing", "")
+	flags.BoolVarP(cmdFlags, &opt.Metadata, "metadata", "M", false, "Add metadata to the listing", "")
+	flags.StringArrayVarP(cmdFlags, &opt.HashTypes, "hash-type", "", nil, "Show only this hash type (may be repeated)", "")
+	flags.BoolVarP(cmdFlags, &statOnly, "stat", "", false, "Just return the info for the pointed to file", "")
 }
 
 var commandDefinition = &cobra.Command{
@@ -63,7 +63,7 @@ The output is an array of Items, where each Item looks like this
       "Tier" : "hot",
     }
 
-If ` + "`--hash`" + ` is not specified the Hashes property won't be emitted. The
+If ` + "`--hash`" + ` is not specified, the Hashes property will be omitted. The
 types of hash can be specified with the ` + "`--hash-type`" + ` parameter (which
 may be repeated). If ` + "`--hash-type`" + ` is set then it implies ` + "`--hash`" + `.
 
@@ -75,7 +75,7 @@ If ` + "`--no-mimetype`" + ` is specified then MimeType will be blank. This can
 speed things up on remotes where reading the MimeType takes an extra
 request (e.g. s3, swift).
 
-If ` + "`--encrypted`" + ` is not specified the Encrypted won't be emitted.
+If ` + "`--encrypted`" + ` is not specified the Encrypted will be omitted.
 
 If ` + "`--dirs-only`" + ` is not specified files in addition to directories are
 returned
@@ -114,8 +114,15 @@ can be processed line by line as each item is written one to a line.
 ` + lshelp.Help,
 	Annotations: map[string]string{
 		"versionIntroduced": "v1.37",
+		"groups":            "Filter,Listing",
 	},
 	RunE: func(command *cobra.Command, args []string) error {
+		// Make sure we set the global Metadata flag too as it
+		// isn't parsed by cobra. We need to do this first
+		// before any backends are created.
+		ci := fs.GetConfig(context.Background())
+		ci.Metadata = opt.Metadata
+
 		cmd.CheckArgs(1, 1, command, args)
 		var fsrc fs.Fs
 		var remote string

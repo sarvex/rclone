@@ -15,7 +15,7 @@ List all the remotes in the config file and defined in environment variables.
 
 rclone listremotes lists all the available remotes from the config file.
 
-When used with the `--long` flag it lists the types too.
+When used with the `--long` flag it lists the types and the descriptions too.
 
 
 ```
@@ -26,12 +26,13 @@ rclone listremotes [flags]
 
 ```
   -h, --help   help for listremotes
-      --long   Show the type as well as names
+      --long   Show the type and the description as well as names
 ```
+
 
 See the [global flags page](/flags/) for global options not listed here.
 
-## SEE ALSO
+# SEE ALSO
 
 * [rclone](/commands/rclone/)	 - Show help for rclone commands, flags and backends.
 

@@ -6,8 +6,10 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"mime"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +24,7 @@ import (
 	"github.com/rclone/rclone/fs/hash"
 	libhttp "github.com/rclone/rclone/lib/http"
 	"github.com/rclone/rclone/lib/http/serve"
+	"github.com/rclone/rclone/lib/systemd"
 	"github.com/rclone/rclone/vfs"
 	"github.com/rclone/rclone/vfs/vfsflags"
 	"github.com/spf13/cobra"
@@ -61,8 +64,8 @@ func init() {
 	libhttp.AddTemplateFlagsPrefix(flagSet, "", &Opt.Template)
 	vfsflags.AddFlags(flagSet)
 	proxyflags.AddFlags(flagSet)
-	flags.StringVarP(flagSet, &Opt.HashName, "etag-hash", "", "", "Which hash to use for the ETag, or auto or blank for off")
-	flags.BoolVarP(flagSet, &Opt.DisableGETDir, "disable-dir-list", "", false, "Disable HTML directory list on GET request for a directory")
+	flags.StringVarP(flagSet, &Opt.HashName, "etag-hash", "", "", "Which hash to use for the ETag, or auto or blank for off", "")
+	flags.BoolVarP(flagSet, &Opt.DisableGETDir, "disable-dir-list", "", false, "Disable HTML directory list on GET request for a directory", "")
 }
 
 // Command definition for cobra
@@ -86,6 +89,7 @@ supported hash on the backend or you can use a named hash such as
 to see the full list.
 
 ### Access WebDAV on Windows
+
 WebDAV shared folder can be mapped as a drive on Windows, however the default settings prevent it.
 Windows will fail to connect to the server using insecure Basic authentication.
 It will not even display any login dialog. Windows requires SSL / HTTPS connection to be used with Basic.
@@ -101,6 +105,7 @@ If required, increase the FileSizeLimitInBytes to a higher value.
 Navigate to the Services interface, then restart the WebClient service.
 
 ### Access Office applications on WebDAV
+
 Navigate to following registry HKEY_CURRENT_USER\Software\Microsoft\Office\[14.0/15.0/16.0]\Common\Internet
 Create a new DWORD BasicAuthLevel with value 2.
     0 - Basic authentication disabled
@@ -109,9 +114,10 @@ Create a new DWORD BasicAuthLevel with value 2.
 
 https://learn.microsoft.com/en-us/office/troubleshoot/powerpoint/office-opens-blank-from-sharepoint
 
-` + libhttp.Help(flagPrefix) + libhttp.TemplateHelp(flagPrefix) + libhttp.AuthHelp(flagPrefix) + vfs.Help + proxy.Help,
+` + libhttp.Help(flagPrefix) + libhttp.TemplateHelp(flagPrefix) + libhttp.AuthHelp(flagPrefix) + vfs.Help() + proxy.Help,
 	Annotations: map[string]string{
 		"versionIntroduced": "v1.39",
+		"groups":            "Filter",
 	},
 	RunE: func(command *cobra.Command, args []string) error {
 		var f fs.Fs
@@ -142,6 +148,7 @@ https://learn.microsoft.com/en-us/office/troubleshoot/powerpoint/office-opens-bl
 			if err != nil {
 				return err
 			}
+			defer systemd.Notify()()
 			s.Wait()
 			return nil
 		})
@@ -197,6 +204,9 @@ func newWebDAV(ctx context.Context, f fs.Fs, opt *Options) (w *WebDAV, err error
 	if err != nil {
 		return nil, fmt.Errorf("failed to init server: %w", err)
 	}
+
+	// Make sure BaseURL starts with a / and doesn't end with one
+	w.opt.HTTP.BaseURL = "/" + strings.Trim(w.opt.HTTP.BaseURL, "/")
 
 	webdavHandler := &webdav.Handler{
 		Prefix:     w.opt.HTTP.BaseURL,
@@ -580,12 +590,14 @@ func (fi FileInfo) ContentType(ctx context.Context) (contentType string, err err
 		fs.Errorf(fi, "Expecting vfs.Node, got %T", fi.FileInfo)
 		return "application/octet-stream", nil
 	}
-	entry := node.DirEntry()
+	entry := node.DirEntry() // can be nil
 	switch x := entry.(type) {
 	case fs.Object:
 		return fs.MimeType(ctx, x), nil
 	case fs.Directory:
 		return "inode/directory", nil
+	case nil:
+		return mime.TypeByExtension(path.Ext(node.Name())), nil
 	}
 	fs.Errorf(fi, "Expecting fs.Object or fs.Directory, got %T", entry)
 	return "application/octet-stream", nil

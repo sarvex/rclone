@@ -82,15 +82,18 @@ All done. Please go back to rclone.
 
 // SharedOptions are shared between backends the utilize an OAuth flow
 var SharedOptions = []fs.Option{{
-	Name: config.ConfigClientID,
-	Help: "OAuth Client Id.\n\nLeave blank normally.",
+	Name:      config.ConfigClientID,
+	Help:      "OAuth Client Id.\n\nLeave blank normally.",
+	Sensitive: true,
 }, {
-	Name: config.ConfigClientSecret,
-	Help: "OAuth Client Secret.\n\nLeave blank normally.",
+	Name:      config.ConfigClientSecret,
+	Help:      "OAuth Client Secret.\n\nLeave blank normally.",
+	Sensitive: true,
 }, {
-	Name:     config.ConfigToken,
-	Help:     "OAuth Access Token as a JSON blob.",
-	Advanced: true,
+	Name:      config.ConfigToken,
+	Help:      "OAuth Access Token as a JSON blob.",
+	Advanced:  true,
+	Sensitive: true,
 }, {
 	Name:     config.ConfigAuthURL,
 	Help:     "Auth server URL.\n\nLeave blank to use the provider defaults.",
@@ -289,7 +292,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't fetch token: %w", err)
 	}
-	changed = changed || (*token != *ts.token)
+	changed = changed || token.AccessToken != ts.token.AccessToken || token.RefreshToken != ts.token.RefreshToken || token.Expiry != ts.token.Expiry
 	ts.token = token
 	if changed {
 		// Bump on the expiry timer if it is set
@@ -373,6 +376,9 @@ func overrideCredentials(name string, m configmap.Mapper, origConfig *oauth2.Con
 	ClientID, ok := m.Get(config.ConfigClientID)
 	if ok && ClientID != "" {
 		newConfig.ClientID = ClientID
+		// Clear out any existing client secret since the ID changed.
+		// (otherwise it's impossible for a config to clear the secret)
+		newConfig.ClientSecret = ""
 		changed = true
 	}
 	ClientSecret, ok := m.Get(config.ConfigClientSecret)

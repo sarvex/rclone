@@ -1,5 +1,4 @@
 //go:build !plan9 && !solaris && !js
-// +build !plan9,!solaris,!js
 
 package oracleobjectstorage
 
@@ -13,7 +12,6 @@ import (
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
-	"github.com/oracle/oci-go-sdk/v65/objectstorage/transfer"
 )
 
 const (
@@ -115,21 +113,6 @@ func useBYOKGetObject(fs *Fs, request *objectstorage.GetObjectRequest) {
 }
 
 func useBYOKCopyObject(fs *Fs, request *objectstorage.CopyObjectRequest) {
-	if fs.opt.SSEKMSKeyID != "" {
-		request.OpcSseKmsKeyId = common.String(fs.opt.SSEKMSKeyID)
-	}
-	if fs.opt.SSECustomerAlgorithm != "" {
-		request.OpcSseCustomerAlgorithm = common.String(fs.opt.SSECustomerAlgorithm)
-	}
-	if fs.opt.SSECustomerKey != "" {
-		request.OpcSseCustomerKey = common.String(fs.opt.SSECustomerKey)
-	}
-	if fs.opt.SSECustomerKeySha256 != "" {
-		request.OpcSseCustomerKeySha256 = common.String(fs.opt.SSECustomerKeySha256)
-	}
-}
-
-func useBYOKUpload(fs *Fs, request *transfer.UploadRequest) {
 	if fs.opt.SSEKMSKeyID != "" {
 		request.OpcSseKmsKeyId = common.String(fs.opt.SSEKMSKeyID)
 	}

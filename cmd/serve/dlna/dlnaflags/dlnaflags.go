@@ -10,8 +10,7 @@ import (
 )
 
 // Help contains the text for the command line help and manual.
-var Help = `
-### Server options
+var Help = `### Server options
 
 Use ` + "`--addr`" + ` to specify which IP address and port the server should
 listen on, e.g. ` + "`--addr 1.2.3.4:8000` or `--addr :8080`" + ` to listen to all
@@ -22,6 +21,7 @@ default "rclone (hostname)".
 
 Use ` + "`--log-trace` in conjunction with `-vv`" + ` to enable additional debug
 logging of all UPNP traffic.
+
 `
 
 // Options is the type for DLNA serving options.
@@ -49,11 +49,11 @@ var (
 
 func addFlagsPrefix(flagSet *pflag.FlagSet, prefix string, Opt *Options) {
 	rc.AddOption("dlna", &Opt)
-	flags.StringVarP(flagSet, &Opt.ListenAddr, prefix+"addr", "", Opt.ListenAddr, "The ip:port or :port to bind the DLNA http server to")
-	flags.StringVarP(flagSet, &Opt.FriendlyName, prefix+"name", "", Opt.FriendlyName, "Name of DLNA server")
-	flags.BoolVarP(flagSet, &Opt.LogTrace, prefix+"log-trace", "", Opt.LogTrace, "Enable trace logging of SOAP traffic")
-	flags.StringArrayVarP(flagSet, &Opt.InterfaceNames, prefix+"interface", "", Opt.InterfaceNames, "The interface to use for SSDP (repeat as necessary)")
-	flags.DurationVarP(flagSet, &Opt.AnnounceInterval, prefix+"announce-interval", "", Opt.AnnounceInterval, "The interval between SSDP announcements")
+	flags.StringVarP(flagSet, &Opt.ListenAddr, prefix+"addr", "", Opt.ListenAddr, "The ip:port or :port to bind the DLNA http server to", prefix)
+	flags.StringVarP(flagSet, &Opt.FriendlyName, prefix+"name", "", Opt.FriendlyName, "Name of DLNA server", prefix)
+	flags.BoolVarP(flagSet, &Opt.LogTrace, prefix+"log-trace", "", Opt.LogTrace, "Enable trace logging of SOAP traffic", prefix)
+	flags.StringArrayVarP(flagSet, &Opt.InterfaceNames, prefix+"interface", "", Opt.InterfaceNames, "The interface to use for SSDP (repeat as necessary)", prefix)
+	flags.DurationVarP(flagSet, &Opt.AnnounceInterval, prefix+"announce-interval", "", Opt.AnnounceInterval, "The interval between SSDP announcements", prefix)
 }
 
 // AddFlags add the command line flags for DLNA serving.

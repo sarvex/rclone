@@ -19,6 +19,7 @@ import (
 	"github.com/rclone/rclone/fs/filter"
 	"github.com/rclone/rclone/fs/hash"
 	"github.com/rclone/rclone/fs/object"
+	"github.com/rclone/rclone/fs/operations"
 	"github.com/rclone/rclone/fstest"
 	"github.com/rclone/rclone/lib/file"
 	"github.com/rclone/rclone/lib/readers"
@@ -73,6 +74,24 @@ func TestUpdatingCheck(t *testing.T) {
 	_, err = in.Read(buf)
 	require.NoError(t, err)
 
+}
+
+// Test corrupted on transfer
+// should error due to size/hash mismatch
+func TestVerifyCopy(t *testing.T) {
+	t.Skip("FIXME this test is unreliable")
+	r := fstest.NewRun(t)
+	filePath := "sub dir/local test"
+	r.WriteFile(filePath, "some content", time.Now())
+	src, err := r.Flocal.NewObject(context.Background(), filePath)
+	require.NoError(t, err)
+	src.(*Object).fs.opt.NoCheckUpdated = true
+
+	for i := 0; i < 100; i++ {
+		go r.WriteFile(src.Remote(), fmt.Sprintf("some new content %d", i), src.ModTime(context.Background()))
+	}
+	_, err = operations.Copy(context.Background(), r.Fremote, nil, filePath+"2", src)
+	assert.Error(t, err)
 }
 
 func TestSymlink(t *testing.T) {
@@ -513,4 +532,44 @@ func TestFilterSymlinkCopyLinks(t *testing.T) {
 
 func TestFilterSymlinkLinks(t *testing.T) {
 	testFilterSymlink(t, false)
+}
+
+func TestCopySymlink(t *testing.T) {
+	ctx := context.Background()
+	r := fstest.NewRun(t)
+	defer r.Finalise()
+	when := time.Now()
+	f := r.Flocal.(*Fs)
+
+	// Create a file and a symlink to it
+	r.WriteFile("src/file.txt", "hello world", when)
+	require.NoError(t, os.Symlink("file.txt", filepath.Join(r.LocalName, "src", "link.txt")))
+	defer func() {
+		// Reset -L/-l mode
+		f.opt.FollowSymlinks = false
+		f.opt.TranslateSymlinks = false
+		f.lstat = os.Lstat
+	}()
+
+	// Set fs into "-l/--links" mode
+	f.opt.FollowSymlinks = false
+	f.opt.TranslateSymlinks = true
+	f.lstat = os.Lstat
+
+	// Create dst
+	require.NoError(t, f.Mkdir(ctx, "dst"))
+
+	// Do copy from src into dst
+	src, err := f.NewObject(ctx, "src/link.txt.rclonelink")
+	require.NoError(t, err)
+	require.NotNil(t, src)
+	dst, err := operations.Copy(ctx, f, nil, "dst/link.txt.rclonelink", src)
+	require.NoError(t, err)
+	require.NotNil(t, dst)
+
+	// Test that we made a symlink and it has the right contents
+	dstPath := filepath.Join(r.LocalName, "dst", "link.txt")
+	linkContents, err := os.Readlink(dstPath)
+	require.NoError(t, err)
+	assert.Equal(t, "file.txt", linkContents)
 }
