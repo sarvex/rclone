@@ -6,10 +6,10 @@ toolchain go1.22.3
 
 require (
 	bazil.org/fuse v0.0.0-20230120002735-62a210ff1fd5
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.1
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.4.0
-	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.2.1
-	github.com/Azure/azure-sdk-for-go/sdk/storage/azfile v1.1.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.5.1
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.3.1
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azfile v1.2.2
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358
 	github.com/Max-Sum/base32768 v0.0.0-20230304063302-18e6ce5945fd
 	github.com/Unknwon/goconfig v1.0.0
@@ -89,8 +89,8 @@ require (
 require (
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.5.1 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.5.2 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/ProtonMail/bcrypt v0.0.0-20211005172633-e235017c1baf // indirect
 	github.com/ProtonMail/gluon v0.17.1-0.20230724134000-308be39be96e // indirect
 	github.com/ProtonMail/go-mime v0.0.0-20230322103455-7d82a3887f2f // indirect
@@ -123,7 +123,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
