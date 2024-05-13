@@ -9,7 +9,7 @@ services:
       - ${SEAFILE_TEST_DATA}/${NAME}/seafile-mysql/db:/var/lib/mysql
 
   memcached:
-    image: memcached:1.6.9
+    image: memcached:1.6.27
     entrypoint: memcached -m 256
 
   seafile:
