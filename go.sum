@@ -551,6 +551,8 @@ github.com/willscott/go-nfs-client v0.0.0-20240104095149-b44639837b00 h1:U0DnHRZ
 github.com/willscott/go-nfs-client v0.0.0-20240104095149-b44639837b00/go.mod h1:Tq++Lr/FgiS3X48q5FETemXiSLGuYMQT2sPjYNPJSwA=
 github.com/winfsp/cgofuse v1.5.1-0.20221118130120-84c0898ad2e0 h1:j3un8DqYvvAOqKI5OPz+/RRVhDFipbPKI4t2Uk5RBJw=
 github.com/winfsp/cgofuse v1.5.1-0.20221118130120-84c0898ad2e0/go.mod h1:uxjoF2jEYT3+x+vC2KJddEGdk/LU8pRowXmyVMHSV5I=
+github.com/winfsp/cgofuse v1.5.1-0.20230130140708-f87f5db493b5 h1:jxZvjx8Ve5sOXorZG0KzTxbp0Cr1n3FEegfmyd9br1k=
+github.com/winfsp/cgofuse v1.5.1-0.20230130140708-f87f5db493b5/go.mod h1:uxjoF2jEYT3+x+vC2KJddEGdk/LU8pRowXmyVMHSV5I=
 github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM=
 github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a h1:fZHgsYlfvtyqToslyjUt3VOPF4J7aK/3MPcK7xp3PDk=
