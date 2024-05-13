@@ -17,7 +17,7 @@ require (
 	github.com/aalpar/deheap v0.0.0-20210914013432-0cc84d79dec3
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/dms v1.6.0
-	github.com/anacrolix/log v0.14.5
+	github.com/anacrolix/log v0.15.2
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go v1.49.20
 	github.com/buengese/sgzip v0.1.1
