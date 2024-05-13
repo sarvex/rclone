@@ -28,7 +28,7 @@ require (
 	github.com/dop251/scsu v0.0.0-20220106150536-84ac88021d00
 	github.com/dropbox/dropbox-sdk-go-unofficial/v6 v6.0.5
 	github.com/gabriel-vasile/mimetype v1.4.3
-	github.com/gdamore/tcell/v2 v2.7.0
+	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/google/uuid v1.6.0
