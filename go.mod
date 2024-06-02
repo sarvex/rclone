@@ -70,7 +70,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3
 	github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76
 	github.com/yunify/qingstor-sdk-go/v3 v3.2.0
-	go.etcd.io/bbolt v1.3.8
+	go.etcd.io/bbolt v1.3.10
 	goftp.io/server/v2 v2.0.1
 	golang.org/x/crypto v0.22.0
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
