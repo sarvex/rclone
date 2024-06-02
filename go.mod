@@ -19,7 +19,7 @@ require (
 	github.com/anacrolix/dms v1.6.0
 	github.com/anacrolix/log v0.14.5
 	github.com/atotto/clipboard v0.1.4
-	github.com/aws/aws-sdk-go v1.49.20
+	github.com/aws/aws-sdk-go v1.53.14
 	github.com/buengese/sgzip v0.1.1
 	github.com/cloudsoda/go-smb2 v0.0.0-20231124195312-f3ec8ae2c891
 	github.com/colinmarc/hdfs/v2 v2.4.0
